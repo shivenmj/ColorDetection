@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Clarity - Color Detection</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #f06, #ff9);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            animation: gradient 5s infinite alternate;
+        }
+
+        body.color-blind-friendly {
+            background: linear-gradient(135deg, #000, #fff);
+            filter: grayscale(100%);
+            color: #000;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            width: 100%;
+            padding: 20px;
+        }
+
+        header img {
+            height: 100px;
+        }
+
+        #app-title {
+            color: #fff;
+            font-size: 2rem;
+            margin-top: 20px;
+            animation: fadeInUp 2s ease-out;
+            text-align: center;
+        }
+
+        #app-title.color-blind-friendly {
+            color: #000;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px 20px;
+            border-radius: 10px;
+        }
+
+        #video-container {
+            position: relative;
+            border: 2px solid #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+            animation: fadeIn 1.5s ease-in;
+
+            width: 90%;
+            max-width: 640px;
+        }
+
+        #video-container.color-blind-friendly {
+            filter: grayscale(100%);
+        }
+
+        #video {
+            display: block;
+            width: 100%;
+        }
+
+        .button-container {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            animation: fadeIn 2s ease-in;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #333;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        button:hover {
+            background-color: #555;
+            transform: scale(1.05);
+        }
+
+        button.color-blind-friendly {
+            background-color: #000;
+            color: #fff;
+        }
+
+        .button-on {
+            background-color: #0f0 !important;
+        }
+
+        .button-off {
+            background-color: #f00 !important;
+        }
+
+        #color-info {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: left;
+            width: 90%;
+            max-width: 300px;
+            margin-bottom: 20px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        #color-info.color-blind-friendly {
+            background-color: rgba(0, 0, 0, 0.9);
+            color: #fff;
+        }
+
+        #color-info p {
+            margin: 10px 0;
+        }
+
+        #color-info span {
+            font-weight: bold;
+        }
+
+        .clicked-box {
+            position: absolute;
+            border: 2px solid red;
+            width: 10px;
+            height: 10px;
+            pointer-events: none;
+            animation: pulse 1s infinite;
+        }
+
+        .clicked-box.color-blind-friendly {
+            border-color: #000;
+        }
+
+        .scale-container {
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .scale-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #ddd;
+            position: relative;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .scale-bar.color-blind-friendly {
+            background-color: #000;
+        }
+
+        .scale-marker {
+            height: 20px;
+            width: 2px;
+            background-color: #333;
+            position: absolute;
+            top: -5px;
+            transition: left 0.5s;
+        }
+
+        .scale-marker.color-blind-friendly {
+            background-color: #fff;
+        }
+
+        .scale-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+        }
+
+        .scale-label {
+            position: relative;
+            width: 10%;
+            text-align: center;
+        }
+
+        .instructions {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 300px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .instructions.color-blind-friendly {
+            background-color: rgba(0, 0, 0, 0.9);
+            color: #fff;
+        }
+
+        .favorites-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 300px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .favorites-container.color-blind-friendly {
+            background-color: rgba(0, 0, 0, 0.9);
+            color: #fff;
+        }
+
+        .favorites-container ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .favorites-container li {
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .delete-button {
+            background-color: red;
+            border: none;
+            color: white;
+            padding: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .delete-button.color-blind-friendly {
+            background-color: #000;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="{{ url_for('static', filename='clarity_logo_new_v2.png') }}" alt="Clarity Logo">
+    </header>
+    <div id="app-title" class="color-blind-friendly">
+        Color Detection App
+    </div>
+    <div id="video-container">
+        <img src="{{ url_for('video_feed') }}" id="video" width="640" height="480">
+        <div id="click-box" class="clicked-box" style="display: none;"></div>
+    </div>
+    <div class="button-container">
+        <button id="speak-button">🔊 Speak</button>
+        <button id="toggle-color-blind-mode">Toggle Color-Blind Mode</button>
+    </div>
+    <div id="color-info">
+        <p>Color: <span id="color-name"></span></p>
+        <p>Makeup: <span id="color-makeup"></span></p>
+        <p>Darkness Level: <span id="darkness-level"></span></p>
+        <div class="scale-container">
+            <div class="scale-bar">
+                <div class="scale-marker" id="scale-marker"></div>
+            </div>
+            <div class="scale-labels" id="scale-labels">
+                <!-- Dynamic labels will be added here -->
+            </div>
+        </div>
+        <p>Associated Objects: <span id="objects-list"></span></p>
+    </div>
+    <form id="favorite-form" class="favorites-container">
+        <h2>Favorite Objects</h2>
+        <input type="text" id="object-name" placeholder="Enter object name" required>
+        <button type="submit">Save</button>
+        <ul id="favorites-list"></ul>
+    </form>
+    <div class="instructions">
+        <h2>Instructions</h2>
+        <p>1. Click on the video feed to select a color.</p>
+        <p>2. The color information and associated objects will be displayed.</p>
+        <p>3. Use the "Speak" button to hear the color description.</p>
+        <p>4. Enter an object name and click "Save" to save the color information.</p>
+    </div>
+    <script>
+        const video = document.getElementById('video');
+        const clickBox = document.getElementById('click-box');
+        const scaleMarker = document.getElementById('scale-marker');
+        const scaleLabels = document.getElementById('scale-labels');
+        const favoriteForm = document.getElementById('favorite-form');
+        const favoritesList = document.getElementById('favorites-list');
+        const toggleColorBlindMode = document.getElementById('toggle-color-blind-mode');
+        const speakButton = document.getElementById('speak-button');
+        let selectedColorInfo = ''; // Initialize empty selected color info
+
+        video.onclick = function(event) {
+            const rect = video.getBoundingClientRect();
+            const x = Math.round(event.clientX - rect.left);
+            const y = Math.round(event.clientY - rect.top);
+
+            // Position the click box
+            clickBox.style.left = `${x - 5}px`;
+            clickBox.style.top = `${y - 5}px`;
+            clickBox.style.display = 'block';
+            console.log(`Clicked at (${x}, ${y})`);
+
+            // Reset the selectedColorInfo to empty when a new color is scanned
+            selectedColorInfo = '';
+
+            fetch('/click_event', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ x: x, y: y })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('color-name').innerText = data.color_name;
+                document.getElementById('color-makeup').innerText = data.color_makeup.join(', ');
+                document.getElementById('darkness-level').innerText = data.darkness_level.toFixed(1);
+                document.getElementById('objects-list').innerText = data.objects_list.join(', ');
+
+                // Save the selected color information for speaking
+                selectedColorInfo = `Color name: ${data.color_name}. Makeup: ${data.color_makeup.join(', ')}. Darkness Level: ${data.darkness_level.toFixed(1)}. Associated Objects: ${data.objects_list.join(', ')}.`;
+
+                // Update the scale marker based on darkness level
+                scaleMarker.style.left = `${data.darkness_level * 10}%`;
+                console.log(`Darkness Level: ${data.darkness_level}`);
+            })
+            .catch(error => console.error('Error:', error));
+        };
+
+        // Function to speak the selected color information
+        speakButton.onclick = function() {
+            if (selectedColorInfo) {
+                console.log(`Attempting to speak: ${selectedColorInfo}`);  // Log the attempt to speak
+                fetch('/speak', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: selectedColorInfo })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        console.log("Successfully sent text to speak.");
+                    } else {
+                        console.error("Failed to send text to speak.");
+                    }
+                    return response.json();  // Ensure response is returned and processed
+                })
+                .then(data => console.log('Speak status:', data))
+                .catch(error => console.error('Error:', error));
+            }
+        };
+
+        favoriteForm.onsubmit = function(event) {
+            event.preventDefault();
+            const objectName = document.getElementById('object-name').value;
+            const colorName = document.getElementById('color-name').innerText;
+            if (objectName && colorName) {
+                fetch('/save_favorite', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ object_name: objectName, color_name: colorName })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const li = document.createElement('li');
+                    li.textContent = `${data.object_name} - ${data.color_name}`;
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = 'Delete';
+                    deleteButton.className = 'delete-button';
+                    deleteButton.onclick = function() {
+                        fetch('/delete_favorite', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ object_name: data.object_name, color_name: data.color_name })
+                        })
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.success) {
+                                favoritesList.removeChild(li);
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                    };
+                    li.appendChild(deleteButton);
+                    favoritesList.appendChild(li);
+                    document.getElementById('object-name').value = ''; // Clear the input
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        };
+
+        toggleColorBlindMode.onclick = function() {
+            document.body.classList.toggle('color-blind-friendly');
+            document.getElementById('app-title').classList.toggle('color-blind-friendly');
+            document.getElementById('video-container').classList.toggle('color-blind-friendly');
+            document.getElementById('color-info').classList.toggle('color-blind-friendly');
+            document.getElementById('click-box').classList.toggle('color-blind-friendly');
+            document.querySelector('.scale-bar').classList.toggle('color-blind-friendly');
+            document.querySelector('.scale-marker').classList.toggle('color-blind-friendly');
+            document.querySelector('.instructions').classList.toggle('color-blind-friendly');
+            document.querySelector('.favorites-container').classList.toggle('color-blind-friendly');
+            document.querySelectorAll('.delete-button').forEach(button => button.classList.toggle('color-blind-friendly'));
+        };
+
+        // Create scale labels dynamically
+        function createScaleLabels() {
+            for (let i = 1; i <= 10; i++) {
+                const label = document.createElement('div');
+                label.className = 'scale-label';
+                label.textContent = i;
+                scaleLabels.appendChild(label);
+            }
+        }
+
+        createScaleLabels();
+    </script>
+</body>
+</html>
