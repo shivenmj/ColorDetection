@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Image Processing</title>
+    <script>
+      function toBase64(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = error => reject(error);
+        });
+      }
+
+      async function uploadImage() {
+        const fileInput = document.getElementById('file');
+        const processType = document.getElementById('processType').value;
+        const base64Image = await toBase64(fileInput.files[0]);
+
+        fetch('/process', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64Image, type: processType })
+        })
+        .then(response => response.json())
+        .then(data => {
+          const img = document.getElementById('processedImage');
+          img.src = 'data:image/png;base64,' + data.image;
+        })
+        .catch(error => console.error('Error:', error));
+      }
+
+      async function getRGB(event) {
+        const img = document.getElementById('processedImage');
+        const fileInput = document.getElementById('file');
+        const rect = img.getBoundingClientRect();
+        const x = Math.round(event.clientX - rect.left);
+        const y = Math.round(event.clientY - rect.top);
+        const base64Image = await toBase64(fileInput.files[0]);
+
+        fetch('/get_rgb', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64Image, x: x, y: y })
+        })
+        .then(response => response.json())
+        .then(data => {
+          alert(`RGB Value: R=${data.r}, G=${data.g}, B=${data.b}`);
+        })
+        .catch(error => console.error('Error:', error));
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Upload and Process Image</h1>
+    <input type="file" id="file">
+    <select id="processType">
+      <option value="grayscale">Grayscale</option>
+      <option value="edges">Edges</option>
+    </select>
+    <button onclick="uploadImage()">Upload and Process</button>
+    <hr>
+    <h2>Processed Image</h2>
+    <img id="processedImage" src="" alt="Processed Image" style="max-width: 100%;" onclick="getRGB(event)">
+  </body>
+</html>
